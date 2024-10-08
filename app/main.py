@@ -3,6 +3,7 @@ import sys
 
 import bencodepy
 
+
 # import requests - available if you need it!
 
 # Examples:
@@ -12,17 +13,17 @@ import bencodepy
 
 bc = bencodepy.Bencode(encoding='utf-8')
 
+def decode_torrent_file(torrent_file):
+    with open(torrent_file, "rb") as file:
+        torrent_data = file.read()
+
+    decoded_data = bencodepy.decode(torrent_data)
+    return decoded_data[b"announce"].decode('utf-8'), decoded_data[b"info"][b"length"]
+
 
 def decode_bencode(bencoded_value):
-    # if chr(bencoded_value[0]).isdigit():
-    #     first_colon_index = bencoded_value.find(b":")
-    #     if first_colon_index == -1:
-    #         raise ValueError("Invalid encoded value")
-    #     return bencoded_value[first_colon_index + 1:]
-    # elif chr(bencoded_value[0]) == "i" and chr(bencoded_value[-1]) == "e":
-    #     return int(bencoded_value[1:-1])
-    # else:
     return bc.decode(bencoded_value)
+
 
 def main():
     command = sys.argv[1]
@@ -41,6 +42,10 @@ def main():
             raise TypeError(f"Type not serializable: {type(data)}")
 
         print(json.dumps(decode_bencode(bencoded_value), default=bytes_to_str))
+    elif command == "info":
+        torr_tracker, torr_length = decode_torrent_file(sys.argv[2])
+        print("Tracker URL:", torr_tracker)
+        print("Length:", torr_length)
     else:
         raise NotImplementedError(f"Unknown command {command}")
 
