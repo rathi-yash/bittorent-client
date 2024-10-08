@@ -18,11 +18,21 @@ def decode_torrent_file(torrent_file):
     with open(torrent_file, "rb") as file:
         torrent_data = file.read()
 
+    result = []
     decoded_data = bencodepy.decode(torrent_data)
     tracker = decoded_data[b"announce"].decode('utf-8')
     length = decoded_data[b"info"][b"length"]
     sha = hashlib.sha1(bencodepy.encode(decoded_data[b'info'])).hexdigest()
-    return tracker, length, sha
+    piece_length = decoded_data[b"info"][b'piece length']
+    # print(decoded_data)
+    print("Tracker URL:", tracker)
+    print("Length:", length)
+    print(f"Info Hash: {sha}")
+    print(f"Piece Length: {piece_length}")
+    print(f"Piece Hashes:")
+    for i in range(0,len(decoded_data[b'info'][b'pieces']), 20):
+        print(decoded_data[b'info'][b'pieces'][i:i+20].hex())
+    return decoded_data
 
 
 def decode_bencode(bencoded_value):
@@ -47,10 +57,8 @@ def main():
 
         print(json.dumps(decode_bencode(bencoded_value), default=bytes_to_str))
     elif command == "info":
-        torr_tracker, torr_length, sha = decode_torrent_file(sys.argv[2])
-        print("Tracker URL:", torr_tracker)
-        print("Length:", torr_length)
-        print(f"Info Hash: {sha}")
+        decoded_file = decode_torrent_file(sys.argv[2])
+
     else:
         raise NotImplementedError(f"Unknown command {command}")
 
