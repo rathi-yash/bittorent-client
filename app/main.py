@@ -4,7 +4,8 @@ import sys
 import bencodepy
 import hashlib
 
-# import requests - available if you need it!
+import requests
+import struct
 
 # Examples:
 #
@@ -34,6 +35,35 @@ def decode_torrent_file(torrent_file):
         print(decoded_data[b'info'][b'pieces'][i:i+20].hex())
     return decoded_data
 
+def getRequest(torrent_file):
+    with open(torrent_file, 'rb') as file:
+        bencoded_file = file.read()
+
+    torrent_info = bencodepy.decode(bencoded_file)
+    tracker_url = torrent_info[b'announce'].decode('utf-8')
+    # sha = hashlib.sha1(bencodepy.encode(decoded_data[b'info'])).hexdigest()
+    # print(torrent_info)
+    query_params = dict(
+        info_hash=hashlib.sha1(bencodepy.encode(torrent_info[b'info'])).digest(),
+        peer_id = "00112233445566778899",
+        port=6881,
+        uploaded=0,
+        downloaded=0,
+        left=torrent_info[b'info'][b'length'],
+        compact=1
+    )
+
+    response = bencodepy.decode(requests.get(tracker_url, query_params).content)
+    # print(response)
+    peers = response[b'peers']
+    for i in range(0, len(peers), 6):
+        peer = peers[i: i + 6]
+
+        ip_address = f"{peer[0]}.{peer[1]}.{peer[2]}.{peer[3]}"
+
+        port = int.from_bytes(peer[4:], byteorder="big", signed=False)
+
+        print(f"{ip_address}:{port}")
 
 def decode_bencode(bencoded_value):
     return bc.decode(bencoded_value)
@@ -58,6 +88,9 @@ def main():
         print(json.dumps(decode_bencode(bencoded_value), default=bytes_to_str))
     elif command == "info":
         decoded_file = decode_torrent_file(sys.argv[2])
+
+    elif command == "peers":
+        getRequest(sys.argv[2])
 
     else:
         raise NotImplementedError(f"Unknown command {command}")
