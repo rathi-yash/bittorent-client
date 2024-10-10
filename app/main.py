@@ -6,6 +6,7 @@ import hashlib
 
 import requests
 import struct
+import socket
 
 # Examples:
 #
@@ -65,6 +66,25 @@ def getRequest(torrent_file):
 
         print(f"{ip_address}:{port}")
 
+def handshakeRequest(torrent_file, ip_port):
+    ip, port = ip_port.split(":")
+    with open(torrent_file, 'rb') as file:
+        parsed = bencodepy.decode(file.read())
+        info = parsed[b"info"]
+        bencoded_info = bencodepy.encode(info)
+        info_hash = hashlib.sha1(bencoded_info).digest()
+
+        handshake = (
+            b"\x13BitTorrent protocol\x00\x00\x00\x00\x00\x00\x00\x00"
+            + info_hash
+            + b"00112233445566778899"
+        )
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.connect((ip, int(port)))
+            sock.send(handshake)
+            print(f"Peer ID: {sock.recv(68)[48:].hex()}")
+
 def decode_bencode(bencoded_value):
     return bc.decode(bencoded_value)
 
@@ -91,6 +111,9 @@ def main():
 
     elif command == "peers":
         getRequest(sys.argv[2])
+
+    elif command == "handshake":
+        handshakeRequest(sys.argv[2], sys.argv[3])
 
     else:
         raise NotImplementedError(f"Unknown command {command}")
