@@ -1,3 +1,33 @@
+# BitTorrent Client
+
+## Cloning the Repository
+
+To get started with this BitTorrent client, first clone the repository to your local machine:
+
+```bash
+git clone https://github.com/rathi-yash/bittorent-client.git
+cd bittorrent-client
+```
+
+## Run :computer:
+
+* Change directory to source in bittorrent folder and inorder to display help options 
+```
+    $ cd app
+    $ python main.py --help
+```
+
+* Example for downloading torrent file given destination path for downloading file
+```
+    $ python main.py input_file.torrent -d destination_path/
+```
+
+* Example for seeding torrent file given destination path of existing file
+```
+    $ python main.py download ../sample.torrent ../
+
+```
+
 ## Motivation 
 
 * Downloading movies, music, games, or very large software is a popular activity using the **Bittorrent communication protocol**, which helps in distributing large chunks of data over the Internet. **One third of internet traffic contains Bittorrent data packets**, making it one of the most interesting and trending topics.
